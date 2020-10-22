@@ -9,14 +9,14 @@ import colorsys
 from PIL import Image
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
-%matplotlib inline
+#%matplotlib inline
 from pynq_dpu.edge.dnndk.tf_yolov3_voc_py.tf_yolov3_voc import *
 
 anchor_list = [10,13,16,30,33,23,30,61,62,45,59,119,116,90,156,198,373,326]
 anchor_float = [float(x) for x in anchor_list]
 anchors = np.array(anchor_float).reshape(-1, 2)
 
-classes_path = "img/voc_classes.txt"
+classes_path = "files/voc_classes.txt"
 class_names = get_class(classes_path)
 
 num_classes = len(class_names)
@@ -94,8 +94,8 @@ def evaluate(yolo_outputs, image_shape, class_names, anchors):
     
 image_path = "img/greyfox-672194.JPEG"
 image = cv2.imread(image_path)
-_, ax = plt.subplots(1)
-_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+#_, ax = plt.subplots(1)
+#_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
 
 image_size = image.shape[:2]
@@ -135,8 +135,9 @@ boxes, scores, classes = evaluate(yolo_outputs, image_size,
                                   class_names, anchors)
                                   
                                   
-_ = draw_boxes(image, boxes, scores, classes)
+#_ = draw_boxes(image, boxes, scores, classes)
 
+print(scores, classes)
 
 n2cube.dpuDestroyTask(task)
 n2cube.dpuDestroyKernel(kernel)
