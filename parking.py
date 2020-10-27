@@ -92,7 +92,8 @@ def evaluate(yolo_outputs, image_shape, class_names, anchors):
     return boxes_, scores_, classes_
     
     
-image_path = "img/greyfox-672194.JPEG"
+#image_path = "img/greyfox-672194.JPEG"
+image_path = "/home/xilinx/Workspace/ParkingApp/img/FULL_IMAGE_1000x750/SUNNY/2016-01-18/camera9/2016-01-18_1710.jpg"
 image = cv2.imread(image_path)
 #_, ax = plt.subplots(1)
 #_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
