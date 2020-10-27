@@ -100,6 +100,10 @@ cap = cv2.VideoCapture(video_path)
 if (cap.isOpened()== False): 
   print("Error opening video stream or file")
 
+n2cube.dpuOpen()
+kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
+task = n2cube.dpuCreateTask(kernel, 0)
+
 while(cap.isOpened()):
     ret, image = cap.read()
     if ret == True:
@@ -113,9 +117,6 @@ while(cap.isOpened()):
         print(image.shape)
         image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
 
-        n2cube.dpuOpen()
-        kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
-        task = n2cube.dpuCreateTask(kernel, 0)
 
 
         input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
