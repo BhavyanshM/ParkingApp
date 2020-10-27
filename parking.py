@@ -103,53 +103,52 @@ if (cap.isOpened()== False):
 while(cap.isOpened()):
     ret, frame = cap.read()
     if ret == True:
-        print(np.asarray(frame.shape)
+        print(np.asarray(frame.shape))
 
-image = cv2.imread(image_path)
-#_, ax = plt.subplots(1)
-#_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        image = cv2.imread(image_path)
+        #_, ax = plt.subplots(1)
+        #_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
+        image_size = image.shape[:2]
+        print(image.shape)
+        image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
 
-image_size = image.shape[:2]
-print(image.shape)
-image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
-
-n2cube.dpuOpen()
-kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
-task = n2cube.dpuCreateTask(kernel, 0)
-
-
-input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
-n2cube.dpuSetInputTensorInHWCFP32(
-    task, CONV_INPUT_NODE, image_data, input_len)
-
-n2cube.dpuRunTask(task)
-
-conv_sbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE1)
-conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, 
-                                               conv_sbbox_size)
-conv_out1 = np.reshape(conv_out1, (1, 13, 13, 75))
-
-conv_mbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE2)
-conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, 
-                                               conv_mbbox_size)
-conv_out2 = np.reshape(conv_out2, (1, 26, 26, 75))
-
-conv_lbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE3)
-conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, 
-                                               conv_lbbox_size)
-conv_out3 = np.reshape(conv_out3, (1, 52, 52, 75))
-
-yolo_outputs = [conv_out1, conv_out2, conv_out3]    
+        n2cube.dpuOpen()
+        kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
+        task = n2cube.dpuCreateTask(kernel, 0)
 
 
-boxes, scores, classes = evaluate(yolo_outputs, image_size, 
-                                  class_names, anchors)
-                                  
-                                  
-#_ = draw_boxes(image, boxes, scores, classes)
+        input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
+        n2cube.dpuSetInputTensorInHWCFP32(
+            task, CONV_INPUT_NODE, image_data, input_len)
 
-print(scores, classes)
+        n2cube.dpuRunTask(task)
+
+        conv_sbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE1)
+        conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, 
+                                                       conv_sbbox_size)
+        conv_out1 = np.reshape(conv_out1, (1, 13, 13, 75))
+
+        conv_mbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE2)
+        conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, 
+                                                       conv_mbbox_size)
+        conv_out2 = np.reshape(conv_out2, (1, 26, 26, 75))
+
+        conv_lbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE3)
+        conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, 
+                                                       conv_lbbox_size)
+        conv_out3 = np.reshape(conv_out3, (1, 52, 52, 75))
+
+        yolo_outputs = [conv_out1, conv_out2, conv_out3]    
+
+
+        boxes, scores, classes = evaluate(yolo_outputs, image_size, 
+                                          class_names, anchors)
+                                          
+                                          
+        #_ = draw_boxes(image, boxes, scores, classes)
+
+        print(scores, classes)
 
 n2cube.dpuDestroyTask(task)
 n2cube.dpuDestroyKernel(kernel)
