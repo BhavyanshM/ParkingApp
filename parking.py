@@ -101,11 +101,11 @@ if (cap.isOpened()== False):
   print("Error opening video stream or file")
 
 while(cap.isOpened()):
-    ret, frame = cap.read()
+    ret, image = cap.read()
     if ret == True:
-        print(np.asarray(frame.shape))
+        # print(np.asarray(image.shape))
 
-        image = cv2.imread(image_path)
+        # image = cv2.imread(image_path)
         #_, ax = plt.subplots(1)
         #_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
