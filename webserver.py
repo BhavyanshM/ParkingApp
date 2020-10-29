@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 from flask import Flask, render_template, Response
+from flask_bootstrap import Bootstrap
 import cv2
+import time
 
 app = Flask(__name__)
+Bootstrap(app)
 
 @app.route('/')
 def index():
