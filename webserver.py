@@ -14,16 +14,19 @@ def index():
 
 
 def gen(cap):
+	count = 0
 	while True:
+		count += 1
 		ret, frame = cap.read()
-		success, img_enc = cv2.imencode('.jpg',frame)
-		final = img_enc.tobytes()
-		yield (b'--frame\r\n'
-			b'Content-Type: image/jpeg\r\n\r\n' + final + b'\r\n')
+		if count % 8 == 0:
+			success, img_enc = cv2.imencode('.jpg',frame)
+			final = img_enc.tobytes()
+			yield (b'--frame\r\n'
+				b'Content-Type: image/jpeg\r\n\r\n' + final + b'\r\n')
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(gen(cv2.VideoCapture("../Videos/ParkingLotKCropped.mp4")),
+    return Response(gen(cv2.VideoCapture("/home/xilinx/jupyter_notebooks/pynq-dpu/video/ParkingLotKCropped.mp4")),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
