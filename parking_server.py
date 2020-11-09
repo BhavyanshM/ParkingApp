@@ -8,10 +8,11 @@ import time
 desktopVideo = "../Videos/ParkingLotKCropped.mp4"
 ultra96Video = "/home/xilinx/jupyter_notebooks/pynq-dpu/video/ParkingLotKCropped.mp4"
 
-ultra96Skip = 8
+ultra96Skip = 4
 desktopSkip = 1
 
-skip = desktopSkip
+video = ultra96Video
+skip = ultra96Skip
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -27,6 +28,7 @@ def gen(cap):
 	while True:
 		count += 1
 		ret, frame = cap.read()
+		frame = cv2.pyrDown(frame)
 		if count % skip == 0:
 			time.sleep(0.03*skip)
 			success, img_enc = cv2.imencode('.jpg',frame)
@@ -36,7 +38,7 @@ def gen(cap):
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(gen(cv2.VideoCapture(desktopVideo)),
+    return Response(gen(cv2.VideoCapture(video)),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
