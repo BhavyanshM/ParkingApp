@@ -11,8 +11,8 @@ ultra96Video = "/home/xilinx/jupyter_notebooks/pynq-dpu/video/ParkingLotKCropped
 ultra96Skip = 4
 desktopSkip = 1
 
-video = ultra96Video
-skip = ultra96Skip
+video = desktopVideo
+skip = desktopSkip
 
 app = Flask(__name__)
 Bootstrap(app)
