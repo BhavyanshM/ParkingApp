@@ -104,6 +104,19 @@ n2cube.dpuOpen()
 kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
 task = n2cube.dpuCreateTask(kernel, 0)
 
+
+import socket
+import time
+
+HOST = ''    # The remote host
+PORT = 50008              # The same port as used by the server
+
+
+count = 0
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((HOST, PORT))
+
 while(cap.isOpened()):
     ret, image = cap.read()
     if ret == True:
@@ -148,6 +161,15 @@ while(cap.isOpened()):
                                           
                                           
         #_ = draw_boxes(image, boxes, scores, classes)
+
+        count += 1
+        d = bytes("hello" + str(count), 'utf-8')
+        s.sendall(d)
+        data = s.recv(1024)
+        print('Received', repr(data))
+
+
+        time.sleep(0.1)
 
         print(scores, classes)
 
