@@ -36,7 +36,8 @@ finish = False
 
 @app.route('/')
 def index():
-	return render_template('index.html')
+	images = os.listdir(app.static_folder)
+	return render_template('index.html', images=images)
 
 
 @app.route('/signup', methods = ['POST'])
