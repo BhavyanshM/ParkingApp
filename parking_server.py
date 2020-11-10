@@ -44,6 +44,10 @@ CONV_OUTPUT_NODE1="conv2d_59_convolution"
 CONV_OUTPUT_NODE2="conv2d_67_convolution"
 CONV_OUTPUT_NODE3="conv2d_75_convolution"
 
+n2cube.dpuOpen()
+kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
+task = n2cube.dpuCreateTask(kernel, 0)
+
 def draw_boxes(image, boxes, scores, classes):
     _, ax = plt.subplots(1)
     ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -155,14 +159,13 @@ def video_feed():
     return Response(gen(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+
+
 def detect():
-	global result, ready, count, finish
+	global result, ready, count, finish, task, kernel
 	cap = cv2.VideoCapture(video)
 
 
-	n2cube.dpuOpen()
-	kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
-	task = n2cube.dpuCreateTask(kernel, 0)
 	
 	while not(finish):
 		count += 1
