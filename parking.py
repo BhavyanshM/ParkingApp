@@ -117,7 +117,12 @@ count = 0
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
 
-while(cap.isOpened()):
+
+
+fourcc = VideoWriter_fourcc(*'MP4V')
+out = VideoWriter("../output/result.mp4", fourcc, 20.0, (640,480))
+
+while(cap.isOpened()) and count < 10:
     ret, image = cap.read()
     if ret == True:
         # print(np.asarray(image.shape))
@@ -173,6 +178,8 @@ while(cap.isOpened()):
 
         print(scores, classes)
 
+cap.release()
+out.release()
 n2cube.dpuDestroyTask(task)
 n2cube.dpuDestroyKernel(kernel)
 
