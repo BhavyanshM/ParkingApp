@@ -105,26 +105,30 @@ kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
 task = n2cube.dpuCreateTask(kernel, 0)
 
 
-import socket
-import time
+#import socket
+#import time
 
-HOST = ''    # The remote host
-PORT = 50008              # The same port as used by the server
+#HOST = ''    # The remote host
+#PORT = 50008              # The same port as used by the server
 
 
 count = 0
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
+#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#s.connect((HOST, PORT))
 
 
+ux, uy, dx, dy = 600, 700, 900, 1200
 
-fourcc = VideoWriter_fourcc(*'MP4V')
-out = VideoWriter("../output/result.mp4", fourcc, 20.0, (640,480))
+fourcc = cv2.VideoWriter_fourcc(*'MPEG')
+out = cv2.VideoWriter("../output/result.avi", fourcc, 20.0, (dy-uy,dx-ux))
 
-while(cap.isOpened()) and count < 10:
+while(cap.isOpened()) and count < 1000:
     ret, image = cap.read()
-    if ret == True:
+    image = image[ux:dx, uy:dy]
+
+    count += 1
+    if ret == True and count % 30 == 1:
         # print(np.asarray(image.shape))
 
         # image = cv2.imread(image_path)
@@ -163,18 +167,29 @@ while(cap.isOpened()) and count < 10:
 
         boxes, scores, classes = evaluate(yolo_outputs, image_size, 
                                           class_names, anchors)
-                                          
-                                          
+
+
+        print(boxes[0,:])
+
+        for i in range(boxes.shape[0]):
+
+                start_point = (int(boxes[i,1]), int(boxes[i,0]))
+                end_point = (int(boxes[i,3]), int(boxes[i,2]))
+
+                color = (255,255,0)
+                thickness = 5
+                image = cv2.rectangle(image, start_point, end_point, color, thickness) 
+
+        out.write(image)                                          
         #_ = draw_boxes(image, boxes, scores, classes)
 
-        count += 1
-        d = bytes("hello" + str(count), 'utf-8')
-        s.sendall(d)
-        data = s.recv(1024)
-        print('Received', repr(data))
+#        d = bytes("hello" + str(count), 'utf-8')
+#        s.sendall(d)
+#        data = s.recv(1024)
+#        print('Received', repr(data))
 
-
-        time.sleep(0.1)
+	
+#        time.sleep(0.1)
 
         print(scores, classes)
 

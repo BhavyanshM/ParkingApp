@@ -12,11 +12,13 @@ import sys
 desktopVideo = "../Videos/ParkingLotKCropped.mp4"
 ultra96Video = "/home/xilinx/jupyter_notebooks/pynq-dpu/video/ParkingLotKCropped.mp4"
 
+resultVideo = "../output/result.avi"
+
 ultra96Skip = 4
 desktopSkip = 1
 
-video = desktopVideo
-skip = desktopSkip
+video = resultVideo
+skip = 1
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -62,33 +64,16 @@ def video_feed():
 
 
 
-def get_output():
-	import socket
-
-	HOST = ''                 # Symbolic name meaning all available interfaces
-	PORT = 50008              # Arbitrary non-privileged port
-	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-		s.bind((HOST, PORT))
-		s.listen(1)
-		conn, addr = s.accept()
-		with conn:
-			print('Connected by', addr)
-			while True:
-				data = conn.recv(1024)
-
-				print(str(data))
-
-				if not data: continue
-				conn.sendall(data)
-
 
 def detect():
+	import time
 	global result, ready, count, finish, task, kernel
 	cap = cv2.VideoCapture(video)
 
 
 	
 	while not(finish):
+		time.sleep(1)
 		count += 1
 		ret, frame = cap.read()
 
@@ -96,7 +81,8 @@ def detect():
 
 		if not(ret):
 			continue
-		frame = cv2.pyrDown(frame)
+#		frame = cv2.pyrDown(frame)
+#		frame = cv2.pyrDown(frame)
 
 		# print("Detect")
 		# print(count)
@@ -114,9 +100,6 @@ def detect():
 if __name__ == '__main__':
 	detector_thread = threading.Thread(target=detect)
 	detector_thread.start()
-
-	output_thread = threading.Thread(target=get_output)
-	output_thread.start()
 
 
 	app.run(host='0.0.0.0', debug=True)
