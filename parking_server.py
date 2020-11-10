@@ -1,17 +1,19 @@
 #!/usr/bin/env python
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, redirect
 from flask_bootstrap import Bootstrap
 import time
 import threading
+import numpy as np
+import cv2
+import lsb_release
+import sys
 
 
 from pynq_dpu import DpuOverlay
 overlay = DpuOverlay("dpu.bit")
 overlay.load_model("dpu_tf_yolov3.elf")
 
-import numpy as np
 import random
-import cv2
 import colorsys
 from PIL import Image
 from matplotlib.patches import Rectangle
@@ -41,32 +43,6 @@ CONV_INPUT_NODE="conv2d_1_convolution"
 CONV_OUTPUT_NODE1="conv2d_59_convolution"
 CONV_OUTPUT_NODE2="conv2d_67_convolution"
 CONV_OUTPUT_NODE3="conv2d_75_convolution"
-
-
-
-desktopVideo = "../Videos/ParkingLotKCropped.mp4"
-ultra96Video = "/home/xilinx/jupyter_notebooks/pynq-dpu/video/ParkingLotKCropped.mp4"
-
-ultra96Skip = 4
-desktopSkip = 1
-
-video = desktopVideo
-skip = desktopSkip
-
-app = Flask(__name__)
-Bootstrap(app)
-
-
-@app.route('/')
-def index():
-	return render_template('index.html')
-
-result = None
-yolo3_output = np.array([0,0])
-ready = False
-yolo3_ready = False
-process = False
-count = 0
 
 def draw_boxes(image, boxes, scores, classes):
     _, ax = plt.subplots(1)
@@ -124,13 +100,55 @@ def evaluate(yolo_outputs, image_shape, class_names, anchors):
 
     return boxes_, scores_, classes_
 
+
+desktopVideo = "../Videos/ParkingLotKCropped.mp4"
+ultra96Video = "/home/xilinx/jupyter_notebooks/pynq-dpu/video/ParkingLotKCropped.mp4"
+
+ultra96Skip = 4
+desktopSkip = 1
+
+
+
+
+video = desktopVideo
+skip = desktopSkip
+
+app = Flask(__name__)
+Bootstrap(app)
+
+
+result = None
+yolo3_output = np.array([0,0])
+ready = False
+yolo3_ready = False
+process = False
+count = 0
+
+finish = False
+
+
+@app.route('/')
+def index():
+	return render_template('index.html')
+
+
+@app.route('/signup', methods = ['POST'])
+def signup():
+	global finish
+	print("POST: Received")
+	finish = True	
+
+	return redirect('/')
+
+
+
 def gen():
 	global result, ready
 	while True:
-		if ready:
-			ready = False
-			yield (b'--frame\r\n'
-				b'Content-Type: image/jpeg\r\n\r\n' + result + b'\r\n')
+		# print("Request:", ready)
+		ready = False
+		yield (b'--frame\r\n'
+			b'Content-Type: image/jpeg\r\n\r\n' + result + b'\r\n')
 
 @app.route('/video_feed')
 def video_feed():
@@ -138,63 +156,72 @@ def video_feed():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def detect():
-	global result, ready, count
+	global result, ready, count, finish
 	cap = cv2.VideoCapture(video)
 
-	# n2cube.dpuOpen()
-	# kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
-	# task = n2cube.dpuCreateTask(kernel, 0)
+
+	n2cube.dpuOpen()
+	kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
+	task = n2cube.dpuCreateTask(kernel, 0)
 	
-	while count < 1000:
+	while not(finish):
 		count += 1
 		ret, frame = cap.read()
+
+		# print("Process")
+
 		if not(ret):
 			continue
 		frame = cv2.pyrDown(frame)
+
+		# print("Detect")
+		# print(count)
 		if count % skip == 0:
 
-			# image_size = image.shape[:2]
-			# print(image.shape)
-			# image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
 
 
 
-			# input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
-			# n2cube.dpuSetInputTensorInHWCFP32(task, CONV_INPUT_NODE, image_data, input_len)
-
-			# n2cube.dpuRunTask(task)
-
-			# conv_sbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE1)
-			# conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, 
-	  #                                                      conv_sbbox_size)
-			# conv_out1 = np.reshape(conv_out1, (1, 13, 13, 75))
-
-			# conv_mbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE2)
-			# conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, 
-	  #                                                      conv_mbbox_size)
-			# conv_out2 = np.reshape(conv_out2, (1, 26, 26, 75))
-
-			# conv_lbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE3)
-			# conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, 
-	  #                                                      conv_lbbox_size)
-			# conv_out3 = np.reshape(conv_out3, (1, 52, 52, 75))
-
-			# yolo_outputs = [conv_out1, conv_out2, conv_out3]    
+			image_size = frame.shape[:2]
+			image_data = np.array(pre_process(frame, (416, 416)), dtype=np.float32)
 
 
-			# boxes, scores, classes = evaluate(yolo_outputs, image_size, class_names, anchors)
+			input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
+			n2cube.dpuSetInputTensorInHWCFP32(task, CONV_INPUT_NODE, image_data, input_len)
+
+			n2cube.dpuRunTask(task)
+
+			conv_sbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE1)
+			conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, 
+	                                                       conv_sbbox_size)
+			conv_out1 = np.reshape(conv_out1, (1, 13, 13, 75))
+
+			conv_mbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE2)
+			conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, 
+	                                                       conv_mbbox_size)
+			conv_out2 = np.reshape(conv_out2, (1, 26, 26, 75))
+
+			conv_lbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE3)
+			conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, 
+	                                                       conv_lbbox_size)
+			conv_out3 = np.reshape(conv_out3, (1, 52, 52, 75))
+
+			yolo_outputs = [conv_out1, conv_out2, conv_out3]    
+
+
+			boxes, scores, classes = evaluate(yolo_outputs, image_size, class_names, anchors)
 	                                          
 	                                          
 	        #_ = draw_boxes(image, boxes, scores, classes)
-
-
 
 			success, img_enc = cv2.imencode('.jpg',frame)
 			result = img_enc.tobytes()
 			ready = True
 
-	# n2cube.dpuDestroyTask(task)
-	# n2cube.dpuDestroyKernel(kernel)
+
+
+
+	n2cube.dpuDestroyTask(task)
+	n2cube.dpuDestroyKernel(kernel)
 
 
 
