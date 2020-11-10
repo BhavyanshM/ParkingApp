@@ -118,14 +118,14 @@ count = 0
 #s.connect((HOST, PORT))
 
 
-ux, uy, dx, dy = 600, 700, 900, 1200
+ux, uy, dx, dy = 400, 300, 1200, 1200
 
 fourcc = cv2.VideoWriter_fourcc(*'MPEG')
 out = cv2.VideoWriter("../output/result.avi", fourcc, 20.0, (dy-uy,dx-ux))
 
 while(cap.isOpened()) and count < 1000:
-    ret, image = cap.read()
-    image = image[ux:dx, uy:dy]
+    ret, frame = cap.read()
+    image = frame[ux:dx, uy:dy]
 
     count += 1
     if ret == True and count % 30 == 1:
@@ -179,6 +179,11 @@ while(cap.isOpened()) and count < 1000:
                 color = (255,255,0)
                 thickness = 5
                 image = cv2.rectangle(image, start_point, end_point, color, thickness) 
+
+                object = image[start_point[0]:end_point[0], start_point[1]:end_point[1]]
+
+                cv2.imwrite("../output/img/" + str(count) + "_" + str(i) + ".jpg", object)
+
 
         out.write(image)                                          
         #_ = draw_boxes(image, boxes, scores, classes)
