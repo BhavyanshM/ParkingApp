@@ -154,42 +154,40 @@ def detect():
 		if count % skip == 0:
 
 			image_size = image.shape[:2]
-	        print(image.shape)
-	        image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
+			print(image.shape)
+			image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
 
 
 
-	        input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
-	        n2cube.dpuSetInputTensorInHWCFP32(
-	            task, CONV_INPUT_NODE, image_data, input_len)
+			input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
+			n2cube.dpuSetInputTensorInHWCFP32(task, CONV_INPUT_NODE, image_data, input_len)
 
-	        n2cube.dpuRunTask(task)
+			n2cube.dpuRunTask(task)
 
-	        conv_sbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE1)
-	        conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, 
+			conv_sbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE1)
+			conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, 
 	                                                       conv_sbbox_size)
-	        conv_out1 = np.reshape(conv_out1, (1, 13, 13, 75))
+			conv_out1 = np.reshape(conv_out1, (1, 13, 13, 75))
 
-	        conv_mbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE2)
-	        conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, 
+			conv_mbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE2)
+			conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, 
 	                                                       conv_mbbox_size)
-	        conv_out2 = np.reshape(conv_out2, (1, 26, 26, 75))
+			conv_out2 = np.reshape(conv_out2, (1, 26, 26, 75))
 
-	        conv_lbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE3)
-	        conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, 
+			conv_lbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE3)
+			conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, 
 	                                                       conv_lbbox_size)
-	        conv_out3 = np.reshape(conv_out3, (1, 52, 52, 75))
+			conv_out3 = np.reshape(conv_out3, (1, 52, 52, 75))
 
-	        yolo_outputs = [conv_out1, conv_out2, conv_out3]    
+			yolo_outputs = [conv_out1, conv_out2, conv_out3]    
 
 
-	        boxes, scores, classes = evaluate(yolo_outputs, image_size, 
-	                                          class_names, anchors)
+			boxes, scores, classes = evaluate(yolo_outputs, image_size, class_names, anchors)
 	                                          
 	                                          
 	        #_ = draw_boxes(image, boxes, scores, classes)
 
-	        print(scores, classes)
+			print(scores, classes)
 
 
 			success, img_enc = cv2.imencode('.jpg',frame)
