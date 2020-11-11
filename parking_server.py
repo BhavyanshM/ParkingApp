@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 import lsb_release
 import sys
-
+import os
 
 desktopVideo = "../Videos/ParkingLotKCropped.mp4"
 ultra96Video = "/home/xilinx/jupyter_notebooks/pynq-dpu/video/ParkingLotKCropped.mp4"
@@ -34,9 +34,10 @@ count = 0
 finish = False
 
 
+
 @app.route('/')
 def index():
-	images = os.listdir(app.static_folder)
+	images = os.listdir(app.static_folder)[10:100]
 	return render_template('index.html', images=images)
 
 

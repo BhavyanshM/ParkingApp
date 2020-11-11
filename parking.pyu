@@ -127,9 +127,6 @@ while(cap.isOpened()) and count < 1000:
     ret, frame = cap.read()
     image = frame[ux:dx, uy:dy].copy()
 
-
-    print("Frame:", frame.shape, "Image:", image.shape)
-
     count += 1
     if ret == True and count % 30 == 1:
         # print(np.asarray(image.shape))
@@ -139,6 +136,7 @@ while(cap.isOpened()) and count < 1000:
         #_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
         image_size = image.shape[:2]
+        print(image.shape)
         image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
 
 
@@ -182,14 +180,9 @@ while(cap.isOpened()) and count < 1000:
                 thickness = 5
                 image = cv2.rectangle(image, start_point, end_point, color, thickness) 
 
-                object = image[start_point[1]:end_point[1], start_point[0]:end_point[0]].copy()
+                object = image[start_point[0]:end_point[0], start_point[1]:end_point[1]].copy()
 
-                print("Object:", object.shape, "Start:", start_point, "End:", end_point)
-
-
-                if object.shape[0] * object.shape[1] > 3000 and object.shape[0] > object.shape[1]:
-                        #object = cv2.resize(object, (120,150))
-                        cv2.imwrite("./static/" + str(count) + "_" + str(i) + ".jpg", object)
+                cv2.imwrite("../output/img/" + str(count) + "_" + str(i) + ".jpg", object)
 
 
         out.write(image)                                          
