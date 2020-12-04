@@ -27,7 +27,7 @@
         <li>Xilinx Ultra96 v2 Embedded FPGA Computer</li>
         <li>YOLOv3 Convolutional Neural Network</li>
         <li>Python3 with Xilinx Pynq DNNDK on-board</li>
-        <li></li>
+        <li>Real-time 1080p Camera Video Stream</li>
       </ul>
     </div>
 
@@ -49,22 +49,35 @@
 <!-- Page Content -->
 </br>
 </br>
-<div class="container">
+<div class="container" style="height:100">
 
   <h1 class="font-weight-light text-center text-lg-left mt-4 mb-0">Thumbnail Gallery</h1>
 
   <hr class="mt-2 mb-5">
 
   <div class="row text-center text-lg-left">
+      <div class="overflow-auto">
+        {% for image in images %}
 
-  	{% for image in images %}
-    <div class="col-lg-3 col-md-4 col-6">
-      <a href="#" class="d-block mb-4 h-100">
-            <img class="img-fluid img-thumbnail" src="{{url_for('static', filename=image)}}" alt="">
-          </a>
+        <div class="card m-2 col-lg-6 col-md-4 col-4" style="width: 18rem;">
+          <div class="shadow p-3 mb-5 bg-white rounded">
+            <a href="#" class="d-block mb-4 h-100">
+                      <img class="img-fluid img-thumbnail" src="{{url_for('static', filename=image)}}" alt="">
+            </a>
+            <div class="card-body">
+              <h5 class="card-title">Vehicle</h5>
+              <p class="card-text">Data - 02:11:2019, Time - 17:04:23</p>
+            </div>
+          </div>
+        </div>
+<!--            <div class="col-lg-6 col-md-6 col-6">-->
+<!--              <a href="#" class="d-block mb-4 h-100">-->
+<!--                    <img class="img-fluid img-thumbnail" src="{{url_for('static', filename=image)}}" alt="">-->
+<!--              </a>-->
+<!--            </div>-->
+        {% endfor %}
+
     </div>
-	{% endfor %}
-
   </div>
 
 </div>

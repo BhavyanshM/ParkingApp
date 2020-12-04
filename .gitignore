@@ -3,3 +3,5 @@ img/*
 *.elf
 *.avi
 *.jpg
+*.png
+*.idea*
