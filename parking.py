@@ -123,7 +123,8 @@ ux, uy, dx, dy = 400, 400, 800, 1000
 fourcc = cv2.VideoWriter_fourcc(*'MPEG')
 out = cv2.VideoWriter("../output/result.avi", fourcc, 20.0, (dy-uy,dx-ux))
 
-while(cap.isOpened()) and count < 1000:
+
+while(cap.isOpened()):
     ret, frame = cap.read()
     image = frame[ux:dx, uy:dy].copy()
 
@@ -131,7 +132,7 @@ while(cap.isOpened()) and count < 1000:
     print("Frame:", frame.shape, "Image:", image.shape)
 
     count += 1
-    if ret == True and count % 30 == 1:
+    if ret == True and count % 4 == 0:
         # print(np.asarray(image.shape))
 
         # image = cv2.imread(image_path)
@@ -171,28 +172,35 @@ while(cap.isOpened()) and count < 1000:
                                           class_names, anchors)
 
 
-        print(boxes[0,:])
+        #print(boxes[0,:])
 
-        for i in range(boxes.shape[0]):
+#        for i in range(boxes.shape[0]):
+#
+#                start_point = (int(boxes[i,1]), int(boxes[i,0]))
+#                end_point = (int(boxes[i,3]), int(boxes[i,2]))
 
-                start_point = (int(boxes[i,1]), int(boxes[i,0]))
-                end_point = (int(boxes[i,3]), int(boxes[i,2]))
-
-                color = (255,255,0)
-                thickness = 5
-                image = cv2.rectangle(image, start_point, end_point, color, thickness) 
-
-                object = image[start_point[1]:end_point[1], start_point[0]:end_point[0]].copy()
-
-                print("Object:", object.shape, "Start:", start_point, "End:", end_point)
+                #object = image[start_point[1]:end_point[1], start_point[0]:end_point[0]].copy()
 
 
-                if object.shape[0] * object.shape[1] > 3000 and object.shape[0] > object.shape[1]:
-                        #object = cv2.resize(object, (120,150))
-                        cv2.imwrite("./static/" + str(count) + "_" + str(i) + ".jpg", object)
+#                color = (255,255,0)
+#                thickness = 5
+#                #image = cv2.rectangle(image, start_point, end_point, color, thickness) 
 
 
-        out.write(image)                                          
+#                print("Object:", object.shape, "Start:", start_point, "End:", end_point, "Box:", boxes[i])
+
+
+#                if object.shape[0] * object.shape[1] > 3000 and object.shape[0] > object.shape[1]:
+                      #object = cv2.resize(object, (150,120))
+#                        cv2.imwrite("./static/" + str(count) + "_" + str(i) + ".jpg", object)
+
+
+        #out.write(image)                                          
+        np.savetxt("../output/text/" + str(count) + ".txt", boxes, delimiter=',', fmt='%d')	
+        print(count)
+	#cv2.imwrite("./output/" + str(1) + ".jpg", image)
+
+
         #_ = draw_boxes(image, boxes, scores, classes)
 
 #        d = bytes("hello" + str(count), 'utf-8')
@@ -203,7 +211,7 @@ while(cap.isOpened()) and count < 1000:
 	
 #        time.sleep(0.1)
 
-        print(scores, classes)
+#        print(scores, classes)
 
 cap.release()
 out.release()
