@@ -6,7 +6,6 @@ import numpy as np
 import random
 import cv2
 import colorsys
-from PIL import Image
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 #%matplotlib inline
@@ -104,114 +103,40 @@ n2cube.dpuOpen()
 kernel = n2cube.dpuLoadKernel(KERNEL_CONV)
 task = n2cube.dpuCreateTask(kernel, 0)
 
-
-#import socket
-#import time
-
-#HOST = ''    # The remote host
-#PORT = 50008              # The same port as used by the server
-
-
 count = 0
 
-#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#s.connect((HOST, PORT))
-
-
 ux, uy, dx, dy = 400, 400, 800, 1000
-
 fourcc = cv2.VideoWriter_fourcc(*'MPEG')
 out = cv2.VideoWriter("../output/result.avi", fourcc, 20.0, (dy-uy,dx-ux))
-
 
 while(cap.isOpened()):
     ret, frame = cap.read()
     image = frame[ux:dx, uy:dy].copy()
-
-
-    print("Frame:", frame.shape, "Image:", image.shape)
-
     count += 1
     if ret == True and count % 4 == 0:
-        # print(np.asarray(image.shape))
-
-        # image = cv2.imread(image_path)
-        #_, ax = plt.subplots(1)
-        #_ = ax.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
         image_size = image.shape[:2]
         image_data = np.array(pre_process(image, (416, 416)), dtype=np.float32)
 
-
-
         input_len = n2cube.dpuGetInputTensorSize(task, CONV_INPUT_NODE)
-        n2cube.dpuSetInputTensorInHWCFP32(
-            task, CONV_INPUT_NODE, image_data, input_len)
-
+        n2cube.dpuSetInputTensorInHWCFP32(task, CONV_INPUT_NODE, image_data, input_len)
         n2cube.dpuRunTask(task)
 
         conv_sbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE1)
-        conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, 
-                                                       conv_sbbox_size)
+        conv_out1 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE1, conv_sbbox_size)
         conv_out1 = np.reshape(conv_out1, (1, 13, 13, 75))
-
         conv_mbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE2)
-        conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, 
-                                                       conv_mbbox_size)
+        conv_out2 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE2, conv_mbbox_size)
         conv_out2 = np.reshape(conv_out2, (1, 26, 26, 75))
-
         conv_lbbox_size = n2cube.dpuGetOutputTensorSize(task, CONV_OUTPUT_NODE3)
-        conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, 
-                                                       conv_lbbox_size)
+        conv_out3 = n2cube.dpuGetOutputTensorInHWCFP32(task, CONV_OUTPUT_NODE3, conv_lbbox_size)
         conv_out3 = np.reshape(conv_out3, (1, 52, 52, 75))
+        yolo_outputs = [conv_out1, conv_out2, conv_out3]
 
-        yolo_outputs = [conv_out1, conv_out2, conv_out3]    
+        boxes, scores, classes = evaluate(yolo_outputs, image_size, class_names, anchors)
 
-
-        boxes, scores, classes = evaluate(yolo_outputs, image_size, 
-                                          class_names, anchors)
-
-
-        #print(boxes[0,:])
-
-#        for i in range(boxes.shape[0]):
-#
-#                start_point = (int(boxes[i,1]), int(boxes[i,0]))
-#                end_point = (int(boxes[i,3]), int(boxes[i,2]))
-
-                #object = image[start_point[1]:end_point[1], start_point[0]:end_point[0]].copy()
-
-
-#                color = (255,255,0)
-#                thickness = 5
-#                #image = cv2.rectangle(image, start_point, end_point, color, thickness) 
-
-
-#                print("Object:", object.shape, "Start:", start_point, "End:", end_point, "Box:", boxes[i])
-
-
-#                if object.shape[0] * object.shape[1] > 3000 and object.shape[0] > object.shape[1]:
-                      #object = cv2.resize(object, (150,120))
-#                        cv2.imwrite("./static/" + str(count) + "_" + str(i) + ".jpg", object)
-
-
-        #out.write(image)                                          
         np.savetxt("../output/text/" + str(count) + ".txt", boxes, delimiter=',', fmt='%d')	
         print(count)
-	#cv2.imwrite("./output/" + str(1) + ".jpg", image)
-
-
-        #_ = draw_boxes(image, boxes, scores, classes)
-
-#        d = bytes("hello" + str(count), 'utf-8')
-#        s.sendall(d)
-#        data = s.recv(1024)
-#        print('Received', repr(data))
-
-	
-#        time.sleep(0.1)
-
-#        print(scores, classes)
 
 cap.release()
 out.release()
