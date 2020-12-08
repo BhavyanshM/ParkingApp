@@ -7,9 +7,7 @@ import numpy as np
 from flask import Flask, render_template, Response, redirect
 from flask_bootstrap import Bootstrap
 
-desktopVideo = "../Videos/ParkingLotKCropped.mp4"
 ultra96Video = "/home/xilinx/jupyter_notebooks/pynq-dpu/video/parking_lot_k_01.mp4"
-resultVideo = "../output/result.avi"
 
 ultra96Skip = 4
 desktopSkip = 1
@@ -46,30 +44,51 @@ def signup():
 def gen(cap):
     global result, ready
     count = 0
+    lock = False
+    lockCount = 0
     while True:
-        count += 1
-        ret, frame = cap.read()
 
-        if not (ret):
-            continue
+        if not(lock):    
+            print("Reading Next Frame", count)
+            ret, frame = cap.read()
+            if not (ret):
+                continue
+
+            count+=1 
+        else:
+            print(lockCount)
+            lockCount+=1
+            time.sleep(1)
 
         if not (count % 4 == 0):
+            print("Skipping mod4")
             continue
 
-        boxes = np.loadtxt("../output/text/" + str(count) + ".txt", dtype=np.int32, delimiter=",")
+        if (str(count) + ".txt") in os.listdir("../output/text/"):
+            print("FileFound:", str(count)+".txt")
 
-        frame = frame[400:800, 400:1000]
-        for box in boxes:
-            cv2.rectangle(frame, (box[1], box[0]), (box[3], box[2]), (255, 0, 255), 3)
+            if lock:
+                time.sleep(0.1)
 
-        time.sleep(0.02)
-        frame = cv2.resize(frame, (int(frame.shape[1] / 2), int(frame.shape[0] / 2)))
-        frame = cv2.resize(frame, (int(frame.shape[1] / 2), int(frame.shape[0] / 2)))
-        success, img_enc = cv2.imencode('.jpg', frame)
-        result = img_enc.tobytes()
+            lock = False
 
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + result + b'\r\n')
+            boxes = np.loadtxt("../output/text/" + str(count) + ".txt", dtype=np.int32, delimiter=",")
+
+            frame = frame[400:800, 400:1000]
+            for box in boxes:
+                cv2.rectangle(frame, (box[1], box[0]), (box[3], box[2]), (255, 0, 255), 3)
+
+            #time.sleep(0.02)
+            frame = cv2.resize(frame, (int(frame.shape[1] / 2), int(frame.shape[0] / 2)))
+            frame = cv2.resize(frame, (int(frame.shape[1] / 2), int(frame.shape[0] / 2)))
+            success, img_enc = cv2.imencode('.jpg', frame)
+            result = img_enc.tobytes()
+
+            yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + result + b'\r\n')
+        else:
+            print("Locking")
+            lock = True	
+
 
 
 @app.route('/video_feed')

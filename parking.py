@@ -111,6 +111,10 @@ out = cv2.VideoWriter("../output/result.avi", fourcc, 20.0, (dy-uy,dx-ux))
 
 while(cap.isOpened()):
     ret, frame = cap.read()
+
+    if not(ret):
+        break
+
     image = frame[ux:dx, uy:dy].copy()
     count += 1
     if ret == True and count % 4 == 0:
